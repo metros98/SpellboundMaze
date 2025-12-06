@@ -37,6 +37,7 @@ let running = false;
 let hideWordText = true;
 let keyHandler = null;
 let rafId = null;
+let clickHandler = null;
 
 export function setConfig(partial){ 
   Object.assign(config, partial); 
@@ -87,6 +88,7 @@ export function init(opts={}){
 
   // Remove old keyHandler if it exists to prevent double-registration
   if(keyHandler) window.removeEventListener('keydown', keyHandler);
+  if(clickHandler && canvas) canvas.removeEventListener('click', clickHandler);
 
   keyHandler = (e)=>{
     if(!running) return;
@@ -111,6 +113,47 @@ export function init(opts={}){
   };
 
   window.addEventListener('keydown', keyHandler);
+
+  clickHandler = (e)=>{
+    if(!running) {
+      console.log('Click ignored - game not running');
+      return;
+    }
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const clickX = (e.clientX - rect.left) * scaleX;
+    const clickY = (e.clientY - rect.top) * scaleY;
+
+    console.log('Click detected:', {clickX, clickY, letterTiles: letterTiles.length});
+
+    // Calculate offsets (SAME as in draw function)
+    const cols = grid[0] ? grid[0].length : config.baseCols*2+1;
+    const rows = grid.length || config.baseRows*2+1;
+    const cs = Math.max(8, Math.min(config.cellSize, Math.floor((canvas.width-40)/cols), Math.floor((canvas.height-40)/rows)));
+    const mazeWidth = cols * cs;
+    const mazeHeight = rows * cs;
+    const offsetX = Math.floor((canvas.width - mazeWidth) / 2);
+    const offsetY = Math.floor((canvas.height - mazeHeight) / 2);
+
+    // Check if click is on a letter tile
+    for(const tile of letterTiles){
+      const gx = tile.x * cs + offsetX;
+      const gy = tile.y * cs + offsetY;
+      console.log('Checking tile:', {char: tile.char, gx, gy, cs});
+      if(clickX >= gx && clickX <= gx + cs && clickY >= gy && clickY <= gy + cs){
+        console.log('Clicked on letter:', tile.char);
+        // Move player to this tile and collect
+        player.x = tile.x;
+        player.y = tile.y;
+        attemptCollect();
+        return;
+      }
+    }
+    console.log('No letter tile clicked');
+  };
+
+  if(canvas) canvas.addEventListener('click', clickHandler);
 
   draw();
 }
@@ -333,6 +376,8 @@ export function stop(){
   if(rafId) cancelAnimationFrame(rafId);
   if(keyHandler) window.removeEventListener('keydown', keyHandler);
   keyHandler = null;
+  if(clickHandler && canvas) canvas.removeEventListener('click', clickHandler);
+  clickHandler = null;
 }
 
 export default {
