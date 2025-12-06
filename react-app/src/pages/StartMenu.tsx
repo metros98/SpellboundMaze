@@ -155,8 +155,6 @@ function PlayerEditor({ players, onPlayersChange, onBack }: PlayerEditorProps) {
   useEffect(()=>{
     const load = ()=>{
       const v = (window.speechSynthesis && window.speechSynthesis.getVoices && window.speechSynthesis.getVoices()) || [];
-      // Debug: log voice URIs to find duplicates
-      console.debug('[PlayerEditor] Available voices:', v.map((voice,i)=>({ i, name: voice.name, voiceURI: voice.voiceURI, lang: voice.lang })));
       setVoices(v);
     };
     load();
@@ -281,25 +279,10 @@ function PlayerEditor({ players, onPlayersChange, onBack }: PlayerEditorProps) {
                       style={{ flex: '1 1 auto', minWidth: '150px', padding: '8px', fontSize: '0.95rem', borderRadius: '8px', border: '2px solid #E0E0E0' }}
                       onChange={e=>{
                         const sel = e.target.value || undefined;
-                        console.debug('PlayerEditor: dropdown onChange fired', { rawValue: e.target.value, sel });
                         const updated = editingPlayer ? { ...(editingPlayer as LocalProfile), voiceId: sel } : null;
                         if(updated){
                           setEditingPlayer(updated);
                           updatePlayer(updated);
-                          // Parse the voice index and log the selected voice
-                          let chosen = null;
-                          if(sel && sel.startsWith('voice-')){
-                            const idx = parseInt(sel.replace('voice-', ''), 10);
-                            chosen = voices[idx] || null;
-                            console.debug('PlayerEditor: selected voice', { 
-                              playerId: updated.id, 
-                              voiceId: sel, 
-                              index: idx, 
-                              voicesLength: voices.length, 
-                              allVoiceNames: voices.map(v=>v.name),
-                              chosen: chosen ? { name: chosen.name, voiceURI: chosen.voiceURI, lang: chosen.lang } : null 
-                            });
-                          }
                         }
                       }}
                     >
@@ -314,28 +297,16 @@ function PlayerEditor({ players, onPlayersChange, onBack }: PlayerEditorProps) {
                     <button className="menu-btn" onClick={()=>{
                       if(editingPlayer){
                         const sample = editingPlayer.name || 'Hello';
-                        // Use the current state voices array (same one used for rendering options)
                         let chosen = null;
                         if(editingPlayer.voiceId && editingPlayer.voiceId.startsWith('voice-')){
                           const idx = parseInt(editingPlayer.voiceId.replace('voice-', ''), 10);
                           chosen = voices[idx] || null;
-                          console.debug('PlayerEditor: play sample', { 
-                            playerId: editingPlayer.id, 
-                            voiceId: editingPlayer.voiceId, 
-                            index: idx, 
-                            voicesLength: voices.length,
-                            allVoiceNames: voices.map(v=>v.name),
-                            chosen: chosen ? { name: chosen.name, voiceURI: chosen.voiceURI, lang: chosen.lang } : null 
-                          });
-                          // Save a composite identifier: name|voiceURI|lang to uniquely identify the voice
                           try{ 
                             if(chosen){ 
                               const compositeId = `${chosen.name}|${chosen.voiceURI}|${chosen.lang}`;
                               saveSettings({ ...(loadSettings()||{}), voiceId: compositeId }); 
                             } 
                           }catch(e){}
-                        } else {
-                          console.debug('PlayerEditor: play sample - no voice selected or invalid format', { voiceId: editingPlayer.voiceId });
                         }
                         speak(sample);
                       }
