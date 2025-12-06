@@ -1,0 +1,4 @@
+:root{}
+/* Base reset - visual theming (background, text color) is handled by `styles/theme.css` */
+body{margin:0;font-family:system-ui,'Segoe UI',Roboto,Arial}
+button{cursor:pointer}

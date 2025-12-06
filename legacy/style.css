@@ -1,0 +1,16 @@
+*{box-sizing:border-box;font-family:Segoe UI, Roboto, Arial, sans-serif}
+body{margin:0;display:flex;flex-direction:column;align-items:center;background:#f4f7fb;color:#222}
+#ui{max-width:900px;width:100%;padding:12px}
+#controls{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+#status{display:flex;gap:12px;align-items:center;font-size:18px}
+#gameArea{position:relative;display:flex;justify-content:center;align-items:center;padding:12px}
+canvas{background:#e9f1ff;border:2px solid #bfd6ff;border-radius:8px}
+#overlay{position:absolute;left:0;top:0;width:100%;height:100%;display:flex;justify-content:center;align-items:center;font-size:36px;color:#fff}
+#overlay.hidden{display:none}
+#reveal{position:absolute;/* place above the canvas, horizontally centered */bottom:calc(100% + 12px);left:50%;transform:translateX(-50%);z-index:10;padding:6px 12px;background:rgba(255,255,255,0.96);border-radius:8px;border:1px solid #d0e6ff;box-shadow:0 4px 10px rgba(0,0,0,0.08);font-size:20px;font-weight:600;color:#163a6f}
+#reveal.hidden{display:none}
+#overlay.success{background:linear-gradient(135deg, rgba(0,128,0,0.85), rgba(0,180,100,0.85))}
+#overlay.fail{background:linear-gradient(135deg, rgba(180,0,0,0.85), rgba(220,40,40,0.85))}
+footer{margin:12px;font-size:13px;color:#444}
+#wordDisplay{font-weight:600}
+#attemptsDisplay{color:#333}

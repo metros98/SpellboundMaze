@@ -1,0 +1,24 @@
+/* ============ Settings Menu Component ============ */
+
+interface SettingsMenuProps {
+  onBack: () => void;
+}
+
+function SettingsMenu({ onBack }: SettingsMenuProps) {
+  return (
+    <div className="start-menu">
+      <header className="menu-header compact">
+        <button className="back-btn" onClick={onBack}>← Back</button>
+        <h1>Settings</h1>
+      </header>
+
+      <section className="settings-section">
+        <h2>📝 Word Lists</h2>
+        <button className="menu-btn secondary-btn">
+          <span className="icon">✏️</span>
+          <span>Manage Words</span>
+        </button>
+      </section>
+    </div>
+  );
+}
