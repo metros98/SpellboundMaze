@@ -1,7 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { loadProfiles, saveProfiles, addProfile, updateProfile, deleteProfile, loadSettings, saveSettings } from '../lib/persistence';
 import { speak } from '../lib/audio';
 import { Profile } from '../types';
+import { loadSeedData, shouldUseSeedData } from '../lib/seedData';
+
+// Polyfill for crypto.randomUUID (for older browsers)
+function generateUUID() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  // Fallback UUID generator
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
 
 type MenuScreen = 'main' | 'players' | 'settings';
 
@@ -15,11 +29,19 @@ export function StartMenu({ onPlay, onEdit }: StartMenuProps) {
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   const [profiles, setProfiles] = useState<Profile[]>([]);
 
-  // load persisted profiles
+  // load persisted profiles or seed data
   useEffect(()=>{
     try{
       const persisted = loadProfiles();
-      setProfiles(persisted || []);
+      
+      // Load seed data if no profiles exist
+      if (shouldUseSeedData()) {
+        const seedPlayers = loadSeedData();
+        setProfiles(seedPlayers);
+        saveProfiles(seedPlayers);
+      } else {
+        setProfiles(persisted || []);
+      }
     }catch(e){ setProfiles([]); }
   }, []);
 
@@ -131,7 +153,10 @@ export function StartMenu({ onPlay, onEdit }: StartMenuProps) {
 
 /* ============ Player Editor Component ============ */
 
-const AVATARS = ['🧙', '🦉', '🐉', '🦊', '🐰', '🐸', '🦁', '🦄', '🐶', '🐱', '🦋', '🐢'];
+const AVATARS = ['🧙', '🦉', '🐉', '🦊', '🐰', '🐸', '🦁', '🦄', '🐶', '🐱', '🦋', '🐢', '🦦'];
+const CUSTOM_AVATARS = [
+  { id: 'otter-face', url: '/avatars/otter-face.png', name: 'Otter' }
+];
 const MAZE_THEMES = [
   { id: 'forest', name: 'Forest', colors: ['#228B22', '#90EE90', '#2E8B57'], chipColor: '#228B22' },
   { id: 'ocean', name: 'Ocean', colors: ['#1E90FF', '#87CEEB', '#00CED1'], chipColor: '#1E90FF' },
@@ -151,6 +176,7 @@ function PlayerEditor({ players, onPlayersChange, onBack }: PlayerEditorProps) {
   const [editingPlayer, setEditingPlayer] = useState<LocalProfile | null>(null);
   const [newName, setNewName] = useState('');
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const editingCardRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(()=>{
     const load = ()=>{
@@ -166,7 +192,7 @@ function PlayerEditor({ players, onPlayersChange, onBack }: PlayerEditorProps) {
 
   const addPlayer = () => {
     const newPlayer: LocalProfile = {
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       name: `Player ${players.length + 1}`,
       avatar: AVATARS[players.length % AVATARS.length],
       color: MAZE_THEMES[players.length % MAZE_THEMES.length].chipColor,
@@ -175,11 +201,16 @@ function PlayerEditor({ players, onPlayersChange, onBack }: PlayerEditorProps) {
       avatarUrl: undefined,
     } as LocalProfile;
     const next = [...players, newPlayer];
-    // persist immediately
     addProfile(newPlayer as Profile);
     onPlayersChange(next);
     setEditingPlayer(newPlayer);
     setNewName(newPlayer.name);
+    
+    setTimeout(() => {
+      if (editingCardRef.current) {
+        editingCardRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }, 100);
   };
 
   const updatePlayer = (updated: LocalProfile) => {
@@ -215,6 +246,7 @@ function PlayerEditor({ players, onPlayersChange, onBack }: PlayerEditorProps) {
         {players.map(player => (
           <div
             key={player.id}
+            ref={editingPlayer?.id === player.id ? editingCardRef : null}
             className={`player-card ${editingPlayer?.id === player.id ? 'editing' : ''}`}
             style={{ '--card-color': player.color } as React.CSSProperties}
           >
@@ -235,13 +267,25 @@ function PlayerEditor({ players, onPlayersChange, onBack }: PlayerEditorProps) {
                     {AVATARS.map(av => (
                       <button
                         key={av}
-                        className={`avatar-option ${editingPlayer.avatar === av ? 'selected' : ''}`}
+                        className={`avatar-option ${editingPlayer.avatar === av && !editingPlayer.avatarUrl ? 'selected' : ''}`}
                         onClick={() => {
-                          setEditingPlayer({ ...editingPlayer, avatar: av });
-                          updatePlayer({ ...editingPlayer, avatar: av });
+                          setEditingPlayer({ ...editingPlayer, avatar: av, avatarUrl: undefined });
+                          updatePlayer({ ...editingPlayer, avatar: av, avatarUrl: undefined });
                         }}
                       >
                         {av}
+                      </button>
+                    ))}
+                    {CUSTOM_AVATARS.map(customAv => (
+                      <button
+                        key={customAv.id}
+                        className={`avatar-option ${editingPlayer.avatarUrl === customAv.url ? 'selected' : ''}`}
+                        onClick={() => {
+                          setEditingPlayer({ ...editingPlayer, avatar: customAv.name, avatarUrl: customAv.url });
+                          updatePlayer({ ...editingPlayer, avatar: customAv.name, avatarUrl: customAv.url });
+                        }}
+                      >
+                        <img src={customAv.url} alt={customAv.name} style={{ width: 40, height: 40, borderRadius: '50%' }} />
                       </button>
                     ))}
                   </div>
@@ -329,7 +373,13 @@ function PlayerEditor({ players, onPlayersChange, onBack }: PlayerEditorProps) {
                   setNewName(player.name);
                 }}
               >
-                <span className="avatar">{player.avatar}</span>
+                <span className="avatar">
+                  {player.avatarUrl ? (
+                    <img src={player.avatarUrl} alt="avatar" style={{ width: 32, height: 32, borderRadius: '50%' }} />
+                  ) : (
+                    player.avatar
+                  )}
+                </span>
                 <span className="name">{player.name}</span>
                 <span className="edit-hint">tap to edit</span>
               </button>
@@ -341,6 +391,19 @@ function PlayerEditor({ players, onPlayersChange, onBack }: PlayerEditorProps) {
       <button className="add-player-btn" onClick={addPlayer}>
         <span className="icon">+</span>
         <span>Add Player</span>
+      </button>
+
+      <button
+        className="menu-btn secondary-btn"
+        onClick={() => {
+          const seedPlayers = loadSeedData();
+          onPlayersChange(seedPlayers);
+          saveProfiles(seedPlayers);
+        }}
+        style={{ marginTop: 12, background: '#4CAF50', color: '#fff' }}
+      >
+        <span className="icon">🌱</span>
+        <span>Load Test Data</span>
       </button>
     </div>
   );

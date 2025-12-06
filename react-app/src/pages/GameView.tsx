@@ -14,6 +14,7 @@ const THEME_COLORS = {
 export default function GameView({ profile, onExit }: { profile?: Profile, onExit: ()=>void }){
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const correctWordsRef = useRef(0)
+  const currentWordRef = useRef('')
   const [overlay, setOverlay] = useState<string | null>(null)
   const [status, setStatus] = useState<any>(null)
   const [showCelebration, setShowCelebration] = useState(false)
@@ -21,6 +22,20 @@ export default function GameView({ profile, onExit }: { profile?: Profile, onExi
   const [wordsCompleted, setWordsCompleted] = useState(0)
   const [correctWords, setCorrectWords] = useState(0)
   const [showButtons, setShowButtons] = useState(false)
+  const [failedWord, setFailedWord] = useState('')
+
+  // Auto-dismiss incorrect feedback after 5 seconds and handle keyboard dismiss
+  useEffect(() => {
+    if (showFeedback === 'incorrect') {
+      const timer = setTimeout(() => setShowFeedback(null), 5000);
+      const handleKeyPress = () => setShowFeedback(null);
+      window.addEventListener('keydown', handleKeyPress);
+      return () => {
+        clearTimeout(timer);
+        window.removeEventListener('keydown', handleKeyPress);
+      };
+    }
+  }, [showFeedback]);
 
   useEffect(()=>{
     const c = canvasRef.current;
@@ -48,6 +63,8 @@ export default function GameView({ profile, onExit }: { profile?: Profile, onExi
         onUpdate: (s)=>{ 
           if(mounted) {
             setStatus(s);
+            // Track current word in ref
+            if(s.word) currentWordRef.current = s.word;
             // Check for word completion
             if(s.collected && s.word && s.collected.length === s.word.length){
               setWordsCompleted(prev => prev + 1);
@@ -76,8 +93,8 @@ export default function GameView({ profile, onExit }: { profile?: Profile, onExi
             }
             // Check for wrong letter
             if(text && (text.includes('Try again') || text.includes('Out of attempts'))){
+              setFailedWord(currentWordRef.current);
               setShowFeedback('incorrect');
-              setTimeout(() => setShowFeedback(null), 1500);
             }
           }
         },
@@ -86,6 +103,7 @@ export default function GameView({ profile, onExit }: { profile?: Profile, onExi
       }, { 
         minLetterSpacing: profile?.words ? 3 : 3, 
         playerAvatar: (profile as any)?.avatar || '🙂',
+        playerAvatarUrl: (profile as any)?.avatarUrl,
         mazeTheme: (profile as any)?.theme || 'forest'
       });
 
@@ -141,7 +159,13 @@ export default function GameView({ profile, onExit }: { profile?: Profile, onExi
         marginBottom: 12,
         border: `3px solid ${themeColor}`
       }}>
-        <span style={{ fontSize: 'clamp(1.5rem, 5vw, 2rem)' }}>{(profile as any)?.avatar || '🙂'}</span>
+        <span style={{ fontSize: 'clamp(1.5rem, 5vw, 2rem)', display: 'flex', alignItems: 'center' }}>
+          {(profile as any)?.avatarUrl ? (
+            <img src={(profile as any).avatarUrl} alt="avatar" style={{ width: 'clamp(1.5rem, 5vw, 2rem)', height: 'clamp(1.5rem, 5vw, 2rem)', borderRadius: '50%' }} />
+          ) : (
+            (profile as any)?.avatar || '🙂'
+          )}
+        </span>
         <span style={{ 
           fontSize: 'clamp(1rem, 3.5vw, 1.3rem)', 
           fontWeight: 700,
@@ -271,25 +295,47 @@ export default function GameView({ profile, onExit }: { profile?: Profile, onExi
       )}
 
       {showFeedback === 'incorrect' && (
-        <div style={{
-          position: 'fixed',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          background: 'linear-gradient(135deg, #FF9800 0%, #FFB74D 100%)',
-          color: '#fff',
-          padding: '32px 48px',
-          borderRadius: '24px',
-          fontSize: '2rem',
-          fontWeight: 'bold',
-          boxShadow: '0 8px 32px rgba(255,152,0,0.6)',
-          animation: 'shake 0.5s ease',
-          zIndex: 1000,
-          textAlign: 'center',
-          pointerEvents: 'none'
-        }}>
+        <div 
+          onClick={() => setShowFeedback(null)}
+          style={{
+            position: 'fixed',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            background: 'linear-gradient(135deg, #FF9800 0%, #FFB74D 100%)',
+            color: '#fff',
+            padding: '32px 48px',
+            borderRadius: '24px',
+            fontSize: '2rem',
+            fontWeight: 'bold',
+            boxShadow: '0 8px 32px rgba(255,152,0,0.6)',
+            animation: 'shake 0.5s ease',
+            zIndex: 1000,
+            textAlign: 'center',
+            cursor: 'pointer',
+            pointerEvents: 'auto'
+          }}
+        >
           <div style={{ fontSize: '3rem', marginBottom: 8 }}>🤔</div>
           <div>Try again!</div>
+          <div style={{ 
+            fontSize: '1.5rem', 
+            marginTop: 16,
+            padding: '12px 24px',
+            background: 'rgba(255,255,255,0.2)',
+            borderRadius: '12px',
+            letterSpacing: '2px'
+          }}>
+            {failedWord.toUpperCase()}
+          </div>
+          <div style={{ 
+            fontSize: '0.9rem', 
+            marginTop: 12, 
+            opacity: 0.8,
+            fontStyle: 'italic'
+          }}>
+            Click or press any key to continue
+          </div>
         </div>
       )}
 
@@ -535,7 +581,7 @@ export default function GameView({ profile, onExit }: { profile?: Profile, onExi
         maxWidth: '600px',
         lineHeight: 1.5
       }}>
-        Use Arrow Keys to move and Space Bar (Jump Bar) to select letters
+        Use Arrow Keys or WASD to move and Space Bar (Jump Bar) to select letters
       </div>
 
       {/* Add animations */}

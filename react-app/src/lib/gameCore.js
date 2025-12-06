@@ -43,6 +43,17 @@ export function setConfig(partial){
   if(partial.mazeTheme && THEME_COLORS[partial.mazeTheme]){
     config.mazeColors = THEME_COLORS[partial.mazeTheme];
   }
+  // Load custom avatar image if URL is provided
+  if(partial.playerAvatarUrl && !config.playerAvatarImage) {
+    const img = new Image();
+    img.onload = () => {
+      config.playerAvatarImage = img;
+    };
+    img.src = partial.playerAvatarUrl;
+  } else if(!partial.playerAvatarUrl) {
+    // Clear image if switching back to emoji
+    config.playerAvatarImage = null;
+  }
 }
 export function setWords(w){ words = w || []; if(ui) ui.enableStart && ui.enableStart(true); }
 export function getState(){ return {words, currentWordIndex, attemptsLeft, grid, player, letterTiles, collected, running}; }
@@ -81,10 +92,10 @@ export function init(opts={}){
     if(!running) return;
     const key = e.key;
     let dx=0, dy=0;
-    if(key === 'ArrowUp') dy=-1;
-    if(key === 'ArrowDown') dy=1;
-    if(key === 'ArrowLeft') dx=-1;
-    if(key === 'ArrowRight') dx=1;
+    if(key === 'ArrowUp' || key === 'w' || key === 'W') dy=-1;
+    if(key === 'ArrowDown' || key === 's' || key === 'S') dy=1;
+    if(key === 'ArrowLeft' || key === 'a' || key === 'A') dx=-1;
+    if(key === 'ArrowRight' || key === 'd' || key === 'D') dx=1;
     if(dx!==0 || dy!==0){
       const nx = player.x + dx;
       const ny = player.y + dy;
@@ -302,11 +313,19 @@ function draw(){
     ctx.fillStyle = '#222'; ctx.font = '13px system-ui'; ctx.textAlign='center';
     ctx.fillText('Press Space to pick', gx + (cs-4)/2, gy + cs - 6);
   }
-  // Draw player avatar emoji (no blue circle)
+  // Draw player avatar (emoji or custom image)
   const px = player.x*cs + offsetX + (cs-4)/2;
   const py = player.y*cs + offsetY + (cs-4)/2;
-  ctx.font = '32px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle';
-  ctx.fillText(config.playerAvatar || '🙂', px, py);
+  
+  if(config.playerAvatarUrl && config.playerAvatarImage) {
+    // Draw custom avatar image
+    const size = 40;
+    ctx.drawImage(config.playerAvatarImage, px - size/2, py - size/2, size, size);
+  } else {
+    // Draw emoji avatar
+    ctx.font = '32px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(config.playerAvatar || '🙂', px, py);
+  }
 }
 
 export function stop(){
