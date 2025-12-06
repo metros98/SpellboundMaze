@@ -1,37 +1,151 @@
-# Spellbound Maze - Magical Spelling Adventure
+# 🎮 Spellbound Maze
 
-This is a small browser-based spelling game for kids. The parent supplies a list of words in `words.txt`. The child hears the word (text-to-speech), then navigates the character to pick up the letters in the correct order.
+An educational spelling game where children navigate a magical maze by spelling words correctly. Features customizable player profiles, multiple difficulty levels, and beautiful themed mazes!
 
-How to run (recommended: run a local HTTP server):
+![Spellbound Maze](https://img.shields.io/badge/React-18.2-61dafb?logo=react) ![TypeScript](https://img.shields.io/badge/TypeScript-5.1-blue?logo=typescript) ![Vite](https://img.shields.io/badge/Vite-7.2-646cff?logo=vite)
 
-PowerShell (Python):
-```powershell
-python -m http.server 8000
-# then open http://localhost:8000 in your browser
-Start-Process 'http://localhost:8000'
+## ✨ Features
+
+### 🎨 **Multiple Players & Profiles**
+- Create unlimited player profiles with unique avatars
+- Custom maze themes (Forest, Ocean, Candy, Space, Sunset, Castle)
+- Personalized word lists for each player
+- Track progress and statistics
+
+### 📝 **Flexible Word Lists**
+- Add custom words per player via the Settings menu
+- Drag-and-drop to reorder words
+- Import/export word lists
+- Pre-loaded test data for quick setup
+
+### 🎯 **Three Difficulty Levels**
+- **Easy**: Only the letters needed (perfect for beginners)
+- **Medium**: +2 random letters to challenge
+- **Hard**: +5 random letters for experts
+
+### 🔊 **Text-to-Speech Support**
+- Choose from multiple voices
+- Preview voices before selecting
+- Automatic word pronunciation
+- Customizable per player
+
+### 🎨 **Beautiful UI**
+- Shiny animated title with magical effects
+- Themed mazes with custom colors
+- Smooth animations and visual feedback
+- Responsive design for all screen sizes
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 16+ installed
+- Modern web browser (Chrome, Edge, Firefox)
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/metros98/SpellboundMaze.git
+   cd SpellboundMaze
+   ```
+
+2. **Install dependencies**
+   ```bash
+   cd react-app
+   npm install
+   ```
+
+3. **Run development server**
+   ```bash
+   npm run dev
+   ```
+
+4. **Open in browser**
+   - Navigate to `http://localhost:5173`
+
+### Build for Production
+
+```bash
+npm run build
 ```
 
-PowerShell (Node npx http-server):
-```powershell
-npx http-server . -p 8000
-Start-Process 'http://localhost:8000'
+The production build will be in `react-app/dist/`
+
+## 🎮 How to Play
+
+1. **Select or Create a Player**
+   - Choose an existing player or create a new one
+   - Customize avatar, theme, and voice
+
+2. **Add Words**
+   - Go to Settings → Select player → Add words
+   - Words can be added via comma-separated list or one per line
+
+3. **Choose Difficulty**
+   - Easy: Perfect for learning
+   - Medium: Adds challenge
+   - Hard: Expert mode
+
+4. **Start Game**
+   - Select a player from the main menu
+   - Click "Start Game"
+   - Use arrow keys (⬆️⬇️⬅️➡️) to navigate the maze
+   - Collect letters in the correct order to spell the word
+   - Complete all words to win!
+
+## 📁 Project Structure
+
+```
+SpellboundMaze/
+├── react-app/              # Modern React application
+│   ├── src/
+│   │   ├── pages/          # React components (StartMenu, GameView, ProfileEditor)
+│   │   ├── lib/            # Core game logic, audio, persistence
+│   │   ├── styles/         # CSS themes
+│   │   └── types.ts        # TypeScript interfaces
+│   ├── public/             # Static assets (avatars)
+│   └── dist/               # Production build
+└── legacy/                 # Original vanilla JS version
 ```
 
-Usage:
-- Edit `words.txt` (one word per line) to provide the spelling list for the child.
-- Open the page, set `Retries allowed` (default 1), then click `Start`.
-- The word will be spoken aloud. Use the arrow keys to move the blue character and pick letters.
-- If the child selects the letters in correct order, a success tune plays and the next word starts.
-- If they pick the wrong letter, a beep plays. They can retry until attempts run out, then the game moves to the next word.
+## 🛠️ Technologies Used
 
-Notes:
-- This is a light demo using the browser's Web Speech API (speechSynthesis) and WebAudio for sounds. For best results, run in a modern browser (Chrome, Edge, Firefox).
-- Because browsers block `fetch()` for `file://` requests, run a local server (instructions above).
+- **React 18** - UI framework
+- **TypeScript** - Type safety
+- **Vite** - Build tool and dev server
+- **HTML Canvas** - Maze rendering
+- **Web Speech API** - Text-to-speech
+- **Web Audio API** - Sound effects
+- **LocalStorage** - Data persistence
 
-Files:
-- `index.html` - main page
-- `style.css` - styles
-- `main.js` - game logic
-- `words.txt` - example words list (editable)
+## 🎨 Customization
 
-Enjoy! If you want a packaged Electron app or mobile build, I can help with next steps.
+### Adding Custom Avatars
+Place avatar images in `react-app/public/avatars/` and update `CUSTOM_AVATARS` in `StartMenu.tsx`
+
+### Creating New Themes
+Add theme definitions to `MAZE_THEMES` in `StartMenu.tsx` with custom color palettes
+
+### Voice Options
+Voices are automatically detected from the browser's speech synthesis API
+
+## 📄 License
+
+This project is open source and available for educational purposes.
+
+## 🤝 Contributing
+
+Contributions, issues, and feature requests are welcome!
+
+## 💡 Future Enhancements
+
+- [ ] Multiplayer mode
+- [ ] Timed challenges
+- [ ] Achievement system
+- [ ] Cloud sync for profiles
+- [ ] Mobile app version
+- [ ] Additional game modes
+
+---
+
+**Made with ❤️ for young learners**
