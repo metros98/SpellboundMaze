@@ -5,6 +5,7 @@ export interface Profile {
   voiceId?: string;
   words: string[];
   stats?: { played: number; correct: number; lastUpdated?: string };
+  difficulty?: 'easy' | 'medium' | 'hard';
 }
 
 export interface Settings {
@@ -13,4 +14,5 @@ export interface Settings {
   tokenAsset?: string;
   minLetterSpacing?: number;
   retriesDefault?: number;
+  voiceId?: string;
 }

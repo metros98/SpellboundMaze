@@ -21,7 +21,8 @@ const config = {
   canvasHeight: 480,
   playerAvatar: '🙂',
   mazeTheme: 'forest',
-  mazeColors: THEME_COLORS.forest
+  mazeColors: THEME_COLORS.forest,
+  difficulty: 'easy' // easy, medium, hard
 };
 
 let ui = null;
@@ -115,17 +116,12 @@ export function init(opts={}){
   window.addEventListener('keydown', keyHandler);
 
   clickHandler = (e)=>{
-    if(!running) {
-      console.log('Click ignored - game not running');
-      return;
-    }
+    if(!running) return;
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
     const clickX = (e.clientX - rect.left) * scaleX;
     const clickY = (e.clientY - rect.top) * scaleY;
-
-    console.log('Click detected:', {clickX, clickY, letterTiles: letterTiles.length});
 
     // Calculate offsets (SAME as in draw function)
     const cols = grid[0] ? grid[0].length : config.baseCols*2+1;
@@ -140,9 +136,7 @@ export function init(opts={}){
     for(const tile of letterTiles){
       const gx = tile.x * cs + offsetX;
       const gy = tile.y * cs + offsetY;
-      console.log('Checking tile:', {char: tile.char, gx, gy, cs});
       if(clickX >= gx && clickX <= gx + cs && clickY >= gy && clickY <= gy + cs){
-        console.log('Clicked on letter:', tile.char);
         // Move player to this tile and collect
         player.x = tile.x;
         player.y = tile.y;
@@ -150,7 +144,6 @@ export function init(opts={}){
         return;
       }
     }
-    console.log('No letter tile clicked');
   };
 
   if(canvas) canvas.addEventListener('click', clickHandler);
@@ -181,6 +174,18 @@ function nextWord(){
   speak(word);
 }
 
+function getRandomLetters(count, excludeWord) {
+  const alphabet = 'abcdefghijklmnopqrstuvwxyz';
+  const result = [];
+  
+  for(let i = 0; i < count; i++) {
+    const randomLetter = alphabet[Math.floor(Math.random() * alphabet.length)];
+    result.push(randomLetter);
+  }
+  
+  return result;
+}
+
 function prepareLevelFor(word){
   let maze = generateMaze(config.baseCols, config.baseRows);
   maze = openUpMaze(maze, config.mazeOpenness);
@@ -194,17 +199,26 @@ function prepareLevelFor(word){
     }
   }
   const letters = word.split('');
+  
+  // Add extra letters based on difficulty
+  let extraLetterCount = 0;
+  if(config.difficulty === 'medium') extraLetterCount = 2;
+  if(config.difficulty === 'hard') extraLetterCount = 5;
+  
+  const extraLetters = extraLetterCount > 0 ? getRandomLetters(extraLetterCount, word) : [];
+  const allLetters = [...letters, ...extraLetters];
+  
   letterTiles = [];
   hideWordText = true;
 
   let reachable = getReachableCells(grid, player.x, player.y).filter(c => !(c.x===player.x && c.y===player.y));
   const traversal = getTraversalPath(grid, player.x, player.y).filter(c => !(c.x===player.x && c.y===player.y));
   let placementCells = traversal;
-  if(placementCells.length < letters.length){
+  if(placementCells.length < allLetters.length){
     placementCells = reachable;
-    if(placementCells.length < letters.length){
-      for(let y=0;y<grid.length && placementCells.length<letters.length;y++){
-        for(let x=0;x<grid[0].length && placementCells.length<letters.length;x++){
+    if(placementCells.length < allLetters.length){
+      for(let y=0;y<grid.length && placementCells.length<allLetters.length;y++){
+        for(let x=0;x<grid[0].length && placementCells.length<allLetters.length;x++){
           if(grid[y][x]===1){ grid[y][x]=0; }
         }
       }
@@ -213,13 +227,13 @@ function prepareLevelFor(word){
   }
 
   const L = placementCells.length;
-  if(L >= letters.length){
+  if(L >= allLetters.length){
     const minSpacing = Math.max(0, Math.floor(config.minLetterSpacing));
-    const feasible = (letters.length <= 1) || ((letters.length - 1) * minSpacing <= (L - 1));
+    const feasible = (allLetters.length <= 1) || ((allLetters.length - 1) * minSpacing <= (L - 1));
     if(minSpacing > 0 && feasible){
       const chosenIndices = [];
-      for(let i=0;i<letters.length;i++){
-        const remaining = letters.length - i - 1;
+      for(let i=0;i<allLetters.length;i++){
+        const remaining = allLetters.length - i - 1;
         const minIndex = (i === 0) ? 0 : (chosenIndices[chosenIndices.length-1] + minSpacing);
         const maxIndex = L - 1 - (remaining * minSpacing);
         let idx = minIndex;
@@ -228,7 +242,8 @@ function prepareLevelFor(word){
         chosenIndices.push(idx);
       }
       const used = new Set();
-      for(let k=0;k<chosenIndices.length;k++){
+      // Place word letters first
+      for(let k=0;k<letters.length;k++){
         let idx = chosenIndices[k];
         let tries = 0;
         while(used.has(idx) && tries < L){ idx = Math.min(L-1, idx+1); tries++; }
@@ -237,11 +252,24 @@ function prepareLevelFor(word){
         }
         used.add(idx);
         const cell = placementCells[idx];
-        letterTiles.push({x:cell.x, y:cell.y, char:letters[k]});
+        letterTiles.push({x:cell.x, y:cell.y, char:letters[k], isWordLetter: true});
+      }
+      // Then place extra letters
+      for(let k=0;k<extraLetters.length;k++){
+        let idx = chosenIndices[letters.length + k];
+        let tries = 0;
+        while(used.has(idx) && tries < L){ idx = Math.min(L-1, idx+1); tries++; }
+        if(used.has(idx)){
+          for(let s=0;s<L;s++) if(!used.has(s)){ idx = s; break; }
+        }
+        used.add(idx);
+        const cell = placementCells[idx];
+        letterTiles.push({x:cell.x, y:cell.y, char:extraLetters[k], isWordLetter: false});
       }
     } else {
-      const spacing = Math.max(1, Math.floor(L / (letters.length + 1)));
+      const spacing = Math.max(1, Math.floor(L / (allLetters.length + 1)));
       const usedIndices = new Set();
+      // Place word letters
       for(let i=0;i<letters.length;i++){
         const base = (i+1)*spacing;
         const jitter = Math.floor((Math.random()-0.5) * Math.max(1, Math.floor(spacing/2)));
@@ -250,13 +278,27 @@ function prepareLevelFor(word){
         while(usedIndices.has(idx) && tries < L){ idx = (idx + 1) % L; tries++; }
         usedIndices.add(idx);
         const cell = placementCells[idx];
-        letterTiles.push({x:cell.x, y:cell.y, char:letters[i]});
+        letterTiles.push({x:cell.x, y:cell.y, char:letters[i], isWordLetter: true});
+      }
+      // Place extra letters
+      for(let i=0;i<extraLetters.length;i++){
+        const base = (letters.length + i + 1)*spacing;
+        const jitter = Math.floor((Math.random()-0.5) * Math.max(1, Math.floor(spacing/2)));
+        let idx = Math.max(0, Math.min(L-1, base + jitter));
+        let tries = 0;
+        while(usedIndices.has(idx) && tries < L){ idx = (idx + 1) % L; tries++; }
+        usedIndices.add(idx);
+        const cell = placementCells[idx];
+        letterTiles.push({x:cell.x, y:cell.y, char:extraLetters[i], isWordLetter: false});
       }
     }
   } else {
     shuffle(reachable);
     for(let i=0;i<letters.length && i<reachable.length;i++){
-      letterTiles.push({x:reachable[i].x, y:reachable[i].y, char:letters[i]});
+      letterTiles.push({x:reachable[i].x, y:reachable[i].y, char:letters[i], isWordLetter: true});
+    }
+    for(let i=0;i<extraLetters.length && (letters.length + i)<reachable.length;i++){
+      letterTiles.push({x:reachable[letters.length + i].x, y:reachable[letters.length + i].y, char:extraLetters[i], isWordLetter: false});
     }
   }
 }

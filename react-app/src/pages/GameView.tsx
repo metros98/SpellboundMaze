@@ -104,7 +104,8 @@ export default function GameView({ profile, onExit }: { profile?: Profile, onExi
         minLetterSpacing: profile?.words ? 3 : 3, 
         playerAvatar: (profile as any)?.avatar || '🙂',
         playerAvatarUrl: (profile as any)?.avatarUrl,
-        mazeTheme: (profile as any)?.theme || 'forest'
+        mazeTheme: (profile as any)?.theme || 'forest',
+        difficulty: (profile as any)?.difficulty || 'easy'
       });
 
       if(profile?.words && profile.words.length > 0){

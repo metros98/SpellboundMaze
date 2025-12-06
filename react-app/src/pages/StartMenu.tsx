@@ -545,6 +545,42 @@ function SettingsMenu({ onBack }: SettingsMenuProps) {
         {/* Word List Management */}
         {selectedPlayer && (
           <div style={{ marginTop: 24 }}>
+            {/* Difficulty Level Setting */}
+            <div style={{ marginBottom: 20, padding: 16, background: '#f0f8ff', borderRadius: 8, border: '2px solid #4a90e2' }}>
+              <label style={{ display: 'block', marginBottom: 8, fontWeight: 'bold', fontSize: '1rem' }}>
+                🎯 Difficulty Level for {selectedPlayer.name}
+              </label>
+              <select
+                value={(selectedPlayer as any).difficulty || 'easy'}
+                onChange={(e) => {
+                  const updated = players.map(p => 
+                    p.id === selectedPlayerId ? { ...p, difficulty: e.target.value as 'easy' | 'medium' | 'hard' } : p
+                  );
+                  setPlayers(updated);
+                  saveProfiles(updated as Profile[]);
+                }}
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  fontSize: '1rem',
+                  borderRadius: '8px',
+                  border: '2px solid #ddd',
+                  background: '#fff',
+                  cursor: 'pointer'
+                }}
+              >
+                <option value="easy">Easy (No extra letters)</option>
+                <option value="medium">Medium (+2 random letters)</option>
+                <option value="hard">Hard (+5 random letters)</option>
+              </select>
+              <div style={{ marginTop: 8, fontSize: '0.85rem', color: '#555', fontStyle: 'italic' }}>
+                {((selectedPlayer as any).difficulty === 'medium' || !(selectedPlayer as any).difficulty || (selectedPlayer as any).difficulty === 'easy') && 
+                  ((selectedPlayer as any).difficulty === 'easy' || !(selectedPlayer as any).difficulty) && 'Perfect for beginners - only the letters needed'}
+                {(selectedPlayer as any).difficulty === 'medium' && 'A bit more challenging with 2 extra letters to ignore'}
+                {(selectedPlayer as any).difficulty === 'hard' && 'Expert mode with 5 extra letters to avoid'}
+              </div>
+            </div>
+
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <h3 style={{ margin: 0 }}>
                 {selectedPlayer.name}'s Words ({selectedPlayer.words?.length || 0})
