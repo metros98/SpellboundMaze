@@ -153,7 +153,7 @@ export function StartMenu({ onPlay, onEdit }: StartMenuProps) {
 
 /* ============ Player Editor Component ============ */
 
-const AVATARS = ['🧙', '🦉', '🐉', '🦊', '🐰', '🐸', '🦁', '🦄', '🐶', '🐱', '🦋', '🐢', '🦦'];
+const AVATARS = ['🧙', '🦉', '🐉', '🦊', '🐰', '🐸', '🦁', '🦄', '🐶', '🐱', '🦋', '🐢', '🦦', '🐨', '🐧', '🦎', '🦜'];
 const CUSTOM_AVATARS = [
   { id: 'otter-face', url: '/avatars/otter-face.png', name: 'Otter' }
 ];
@@ -162,6 +162,8 @@ const MAZE_THEMES = [
   { id: 'ocean', name: 'Ocean', colors: ['#1E90FF', '#87CEEB', '#00CED1'], chipColor: '#1E90FF' },
   { id: 'candy', name: 'Candy', colors: ['#FF69B4', '#FFB6C1', '#DDA0DD'], chipColor: '#FF69B4' },
   { id: 'space', name: 'Space', colors: ['#191970', '#4B0082', '#9370DB'], chipColor: '#191970' },
+  { id: 'sunset', name: 'Sunset', colors: ['#FFE4D6', '#8B4A6B', '#FF6B4A'], chipColor: '#8B4A6B' },
+  { id: 'castle', name: 'Castle', colors: ['#E8ECF0', '#4A5568', '#D4AF37'], chipColor: '#4A5568' },
 ];
 
 type LocalProfile = Profile & { avatar?: string; color?: string };

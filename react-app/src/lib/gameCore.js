@@ -6,7 +6,9 @@ const THEME_COLORS = {
   forest: { floor: '#e8f5e9', wall: '#558b2f', border: '#a5d6a7' },
   ocean: { floor: '#e1f5fe', wall: '#0277bd', border: '#81d4fa' },
   candy: { floor: '#fce4ec', wall: '#c2185b', border: '#f8bbd0' },
-  space: { floor: '#e8eaf6', wall: '#3949ab', border: '#9fa8da' }
+  space: { floor: '#e8eaf6', wall: '#3949ab', border: '#9fa8da' },
+  sunset: { floor: '#FFE4D6', wall: '#8B4A6B', border: '#FF6B4A' },
+  castle: { floor: '#E8ECF0', wall: '#4A5568', border: '#D4AF37 ' }
 };
 
 // Game core: stateful module that manages grid, player, letters, and rendering
@@ -362,19 +364,39 @@ function draw(){
   const offsetY = Math.floor((canvas.height - mazeHeight) / 2);
   
   for(let y=0;y<rows;y++){
-    for(let x=0;x<cols;x++){
-      const gx = x*cs + offsetX;
-      const gy = y*cs + offsetY;
+  for(let x=0;x<cols;x++){
+    const gx = x*cs + offsetX;
+    const gy = y*cs + offsetY;
+    
+    if(grid[y] && grid[y][x]===1){
+      // Draw solid wall block with brick-like appearance
+      ctx.fillStyle = config.mazeColors.wall;
+      ctx.fillRect(gx, gy, cs-2, cs-2);
+      
+      // Add darker border for depth
+      ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(gx, gy, cs-2, cs-2);
+      ctx.lineWidth = 1;
+      
+      // Add highlight on top-left for 3D effect
+      ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+      ctx.beginPath();
+      ctx.moveTo(gx+1, gy+cs-3);
+      ctx.lineTo(gx+1, gy+1);
+      ctx.lineTo(gx+cs-3, gy+1);
+      ctx.stroke();
+    } else {
+      // Draw floor tile
       ctx.fillStyle = config.mazeColors.floor;
-      ctx.fillRect(gx, gy, cs-4, cs-4);
-      if(grid[y] && grid[y][x]===1){
-        ctx.fillStyle = config.mazeColors.wall;
-        ctx.fillRect(gx+6,gy+6,cs-16,cs-16);
-      }
+      ctx.fillRect(gx, gy, cs-2, cs-2);
+      
+      // Subtle border for floor
       ctx.strokeStyle = config.mazeColors.border;
-      ctx.strokeRect(gx, gy, cs-4, cs-4);
+      ctx.strokeRect(gx, gy, cs-2, cs-2);
     }
   }
+}
   for(const t of letterTiles){
     const gx = t.x*cs + offsetX;
     const gy = t.y*cs + offsetY;

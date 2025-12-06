@@ -8,8 +8,10 @@ const THEME_COLORS = {
   forest: { wall: '#558b2f' },
   ocean: { wall: '#0277bd' },
   candy: { wall: '#c2185b' },
-  space: { wall: '#3949ab' }
-};
+  space: { wall: '#3949ab' },
+  sunset: { wall: '#8B4A6B' },
+  castle: { wall: '#4A5568' }
+};6
 
 export default function GameView({ profile, onExit }: { profile?: Profile, onExit: ()=>void }){
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
