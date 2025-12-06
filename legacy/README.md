@@ -1,7 +1,7 @@
 ````markdown
-# Spelling Bee - Simple Learning Game (Legacy Demo)
+# Spellbound Maze - Simple Learning Game (Legacy Demo)
 
-This folder contains the original demo version of the Spelling Bee game.
+This folder contains the original demo version of the Spellbound Maze game.
 
 Open `index.html` (run via a local HTTP server) to play the legacy demo.
 

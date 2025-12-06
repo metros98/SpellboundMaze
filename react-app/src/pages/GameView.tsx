@@ -104,10 +104,10 @@ export default function GameView({ profile, onExit }: { profile?: Profile, onExi
         onEnableStart: (_)=>{}
       }, { 
         minLetterSpacing: profile?.words ? 3 : 3, 
-        playerAvatar: (profile as any)?.avatar || '🙂',
-        playerAvatarUrl: (profile as any)?.avatarUrl,
-        mazeTheme: (profile as any)?.theme || 'forest',
-        difficulty: (profile as any)?.difficulty || 'easy'
+        playerAvatar: profile?.avatar || '🙂',
+        playerAvatarUrl: profile?.avatarUrl,
+        mazeTheme: profile?.theme || 'forest',
+        difficulty: profile?.difficulty || 'easy'
       });
 
       if(profile?.words && profile.words.length > 0){
@@ -119,7 +119,7 @@ export default function GameView({ profile, onExit }: { profile?: Profile, onExi
     return ()=>{ mounted = false; gameAdapter.stop().catch(()=>{}); };
   }, [profile])
 
-  const themeId = (profile as any)?.theme || 'forest';
+  const themeId = profile?.theme || 'forest';
   const themeColor = THEME_COLORS[themeId as keyof typeof THEME_COLORS]?.wall || '#558b2f';
 
   const word = status?.word || '';
@@ -163,10 +163,10 @@ export default function GameView({ profile, onExit }: { profile?: Profile, onExi
         border: `3px solid ${themeColor}`
       }}>
         <span style={{ fontSize: 'clamp(1.5rem, 5vw, 2rem)', display: 'flex', alignItems: 'center' }}>
-          {(profile as any)?.avatarUrl ? (
-            <img src={(profile as any).avatarUrl} alt="avatar" style={{ width: 'clamp(1.5rem, 5vw, 2rem)', height: 'clamp(1.5rem, 5vw, 2rem)', borderRadius: '50%' }} />
+          {profile?.avatarUrl ? (
+            <img src={profile.avatarUrl} alt="avatar" style={{ width: 'clamp(1.5rem, 5vw, 2rem)', height: 'clamp(1.5rem, 5vw, 2rem)', borderRadius: '50%' }} />
           ) : (
-            (profile as any)?.avatar || '🙂'
+            profile?.avatar || '🙂'
           )}
         </span>
         <span style={{ 

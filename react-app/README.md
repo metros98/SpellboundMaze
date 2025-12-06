@@ -1,4 +1,4 @@
-This folder contains a Vite + React + TypeScript scaffold for the Spelling Bee UI.
+This folder contains a Vite + React + TypeScript scaffold for the Spellbound Maze UI.
 
 Run locally:
 

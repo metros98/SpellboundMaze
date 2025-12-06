@@ -1,4 +1,4 @@
-# Spelling Bee - Simple Learning Game
+# Spellbound Maze - Magical Spelling Adventure
 
 This is a small browser-based spelling game for kids. The parent supplies a list of words in `words.txt`. The child hears the word (text-to-speech), then navigates the character to pick up the letters in the correct order.
 

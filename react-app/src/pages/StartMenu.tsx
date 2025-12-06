@@ -4,18 +4,31 @@ import { speak } from '../lib/audio';
 import { Profile } from '../types';
 import { loadSeedData, shouldUseSeedData } from '../lib/seedData';
 
-// Polyfill for crypto.randomUUID (for older browsers)
+// UUID generator
 function generateUUID() {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
     return crypto.randomUUID();
   }
-  // Fallback UUID generator
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
     const r = Math.random() * 16 | 0;
     const v = c === 'x' ? r : (r & 0x3 | 0x8);
     return v.toString(16);
   });
 }
+
+// Constants
+const AVATARS = ['🧙', '🦉', '🐉', '🦊', '🐰', '🐸', '🦁', '🦄', '🐶', '🐱', '🦋', '🐢', '🦦', '🐨', '🐧', '🦎', '🦜'];
+const CUSTOM_AVATARS = [
+  { id: 'otter-face', url: '/avatars/otter-face.png', name: 'Otter' }
+];
+const MAZE_THEMES = [
+  { id: 'forest', name: 'Forest', colors: ['#228B22', '#90EE90', '#2E8B57'], chipColor: '#228B22' },
+  { id: 'ocean', name: 'Ocean', colors: ['#1E90FF', '#87CEEB', '#00CED1'], chipColor: '#1E90FF' },
+  { id: 'candy', name: 'Candy', colors: ['#FF69B4', '#FFB6C1', '#DDA0DD'], chipColor: '#FF69B4' },
+  { id: 'space', name: 'Space', colors: ['#191970', '#4B0082', '#9370DB'], chipColor: '#191970' },
+  { id: 'sunset', name: 'Sunset', colors: ['#FFE4D6', '#8B4A6B', '#FF6B4A'], chipColor: '#8B4A6B' },
+  { id: 'castle', name: 'Castle', colors: ['#E8ECF0', '#4A5568', '#D4AF37'], chipColor: '#4A5568' },
+];
 
 type MenuScreen = 'main' | 'players' | 'settings';
 
@@ -24,17 +37,44 @@ interface StartMenuProps {
   onEdit?: (profile?: Profile) => void;
 }
 
+/* ============ Reusable Player Chip Component ============ */
+function PlayerChip({ 
+  player, 
+  isSelected, 
+  onClick 
+}: { 
+  player: Profile; 
+  isSelected: boolean; 
+  onClick: () => void;
+}) {
+  return (
+    <button
+      className={`player-chip ${isSelected ? 'selected' : ''}`}
+      onClick={onClick}
+      style={{ '--chip-color': player.color || '#5B9BD5' } as React.CSSProperties}
+    >
+      <span className="avatar">
+        {player.avatarUrl ? (
+          <img src={player.avatarUrl} alt="avatar" style={{ width: 24, height: 24, borderRadius: '50%' }} />
+        ) : (
+          player.avatar || player.name.charAt(0) || '🙂'
+        )}
+      </span>
+      <span className="name">{player.name}</span>
+      {isSelected && <span className="check">✓</span>}
+    </button>
+  );
+}
+
+/* ============ Main Menu Component ============ */
 export function StartMenu({ onPlay, onEdit }: StartMenuProps) {
   const [screen, setScreen] = useState<MenuScreen>('main');
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   const [profiles, setProfiles] = useState<Profile[]>([]);
 
-  // load persisted profiles or seed data
-  useEffect(()=>{
-    try{
+  useEffect(() => {
+    try {
       const persisted = loadProfiles();
-      
-      // Load seed data if no profiles exist
       if (shouldUseSeedData()) {
         const seedPlayers = loadSeedData();
         setProfiles(seedPlayers);
@@ -42,11 +82,12 @@ export function StartMenu({ onPlay, onEdit }: StartMenuProps) {
       } else {
         setProfiles(persisted || []);
       }
-    }catch(e){ setProfiles([]); }
+    } catch (e) {
+      setProfiles([]);
+    }
   }, []);
 
   const toggleProfileSelection = (id: string) => {
-    // single-selection: select or deselect
     setSelectedProfileId(prev => prev === id ? null : id);
   };
 
@@ -54,9 +95,12 @@ export function StartMenu({ onPlay, onEdit }: StartMenuProps) {
     if (!selectedProfileId) return;
     const profile = profiles.find(p => p.id === selectedProfileId);
     if (!profile) return;
-    // If the profile has no words, open the editor first (so user can add words)
+    
     if (!profile.words || profile.words.length === 0) {
-      if (onEdit) { onEdit(profile); return; }
+      if (onEdit) {
+        onEdit(profile);
+        return;
+      }
       alert('Please add some words for this profile before starting the game.');
       return;
     }
@@ -67,19 +111,25 @@ export function StartMenu({ onPlay, onEdit }: StartMenuProps) {
     return (
       <PlayerEditor
         players={profiles}
-        onPlayersChange={(ps)=>{ setProfiles(ps); saveProfiles(ps); }}
+        onPlayersChange={(ps) => {
+          setProfiles(ps);
+          saveProfiles(ps);
+        }}
         onBack={() => setScreen('main')}
       />
     );
   }
 
   if (screen === 'settings') {
-    return <SettingsMenu onBack={() => {
-      // Reload profiles when returning from settings to get updated word lists
-      const persisted = loadProfiles();
-      setProfiles(persisted || []);
-      setScreen('main');
-    }} />;
+    return (
+      <SettingsMenu
+        onBack={() => {
+          const persisted = loadProfiles();
+          setProfiles(persisted || []);
+          setScreen('main');
+        }}
+      />
+    );
   }
 
   return (
@@ -92,28 +142,22 @@ export function StartMenu({ onPlay, onEdit }: StartMenuProps) {
 
       <p className="tagline">Navigate the maze by spelling words!</p>
 
-      {/* Player Selection */}
-          {profiles.length > 0 && (
+      {profiles.length > 0 && (
         <section className="player-select">
           <h2>Who's playing?</h2>
           <div className="player-chips">
-                    {profiles.map(p => (
-                  <button
-                    key={p.id}
-                    className={`player-chip ${selectedProfileId === p.id ? 'selected' : ''}`}
-                    onClick={() => toggleProfileSelection(p.id)}
-                    style={{ '--chip-color': (p as any).color || '#5B9BD5' } as React.CSSProperties}
-                  >
-                    <span className="avatar">{p.avatarUrl ? <img src={p.avatarUrl} alt="avatar" style={{width:24,height:24}} /> : ((p as any).avatar || (p.name||'').charAt(0) || '🙂')}</span>
-                    <span className="name">{p.name}</span>
-                    {selectedProfileId === p.id && <span className="check">✓</span>}
-                  </button>
-                ))}
+            {profiles.map(p => (
+              <PlayerChip
+                key={p.id}
+                player={p}
+                isSelected={selectedProfileId === p.id}
+                onClick={() => toggleProfileSelection(p.id)}
+              />
+            ))}
           </div>
         </section>
       )}
 
-      {/* Main Menu Buttons */}
       <nav className="menu-buttons">
         <button
           className="menu-btn primary"
@@ -135,7 +179,6 @@ export function StartMenu({ onPlay, onEdit }: StartMenuProps) {
         </button>
       </nav>
 
-      {/* Decorative elements */}
       <div className="decorations">
         <span className="float-char char-1">🧙</span>
         <span className="float-char char-2">🦉</span>
@@ -152,72 +195,55 @@ export function StartMenu({ onPlay, onEdit }: StartMenuProps) {
 }
 
 /* ============ Player Editor Component ============ */
-
-const AVATARS = ['🧙', '🦉', '🐉', '🦊', '🐰', '🐸', '🦁', '🦄', '🐶', '🐱', '🦋', '🐢', '🦦', '🐨', '🐧', '🦎', '🦜'];
-const CUSTOM_AVATARS = [
-  { id: 'otter-face', url: '/avatars/otter-face.png', name: 'Otter' }
-];
-const MAZE_THEMES = [
-  { id: 'forest', name: 'Forest', colors: ['#228B22', '#90EE90', '#2E8B57'], chipColor: '#228B22' },
-  { id: 'ocean', name: 'Ocean', colors: ['#1E90FF', '#87CEEB', '#00CED1'], chipColor: '#1E90FF' },
-  { id: 'candy', name: 'Candy', colors: ['#FF69B4', '#FFB6C1', '#DDA0DD'], chipColor: '#FF69B4' },
-  { id: 'space', name: 'Space', colors: ['#191970', '#4B0082', '#9370DB'], chipColor: '#191970' },
-  { id: 'sunset', name: 'Sunset', colors: ['#FFE4D6', '#8B4A6B', '#FF6B4A'], chipColor: '#8B4A6B' },
-  { id: 'castle', name: 'Castle', colors: ['#E8ECF0', '#4A5568', '#D4AF37'], chipColor: '#4A5568' },
-];
-
-type LocalProfile = Profile & { avatar?: string; color?: string };
-
 interface PlayerEditorProps {
-  players: LocalProfile[];
-  onPlayersChange: (players: LocalProfile[]) => void;
+  players: Profile[];
+  onPlayersChange: (players: Profile[]) => void;
   onBack: () => void;
 }
 
 function PlayerEditor({ players, onPlayersChange, onBack }: PlayerEditorProps) {
-  const [editingPlayer, setEditingPlayer] = useState<LocalProfile | null>(null);
+  const [editingPlayer, setEditingPlayer] = useState<Profile | null>(null);
   const [newName, setNewName] = useState('');
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const editingCardRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(()=>{
-    const load = ()=>{
-      const v = (window.speechSynthesis && window.speechSynthesis.getVoices && window.speechSynthesis.getVoices()) || [];
+  useEffect(() => {
+    const load = () => {
+      const v = (window.speechSynthesis?.getVoices?.()) || [];
       setVoices(v);
     };
     load();
-    if(window.speechSynthesis){
+    if (window.speechSynthesis) {
       window.speechSynthesis.onvoiceschanged = load;
     }
-    return ()=>{ if(window.speechSynthesis) window.speechSynthesis.onvoiceschanged = null; };
+    return () => {
+      if (window.speechSynthesis) window.speechSynthesis.onvoiceschanged = null;
+    };
   }, []);
 
   const addPlayer = () => {
-    const newPlayer: LocalProfile = {
+    const newPlayer: Profile = {
       id: generateUUID(),
       name: `Player ${players.length + 1}`,
       avatar: AVATARS[players.length % AVATARS.length],
       color: MAZE_THEMES[players.length % MAZE_THEMES.length].chipColor,
       theme: MAZE_THEMES[players.length % MAZE_THEMES.length].id,
       words: [],
-      avatarUrl: undefined,
-    } as LocalProfile;
+    };
     const next = [...players, newPlayer];
-    addProfile(newPlayer as Profile);
+    addProfile(newPlayer);
     onPlayersChange(next);
     setEditingPlayer(newPlayer);
     setNewName(newPlayer.name);
     
     setTimeout(() => {
-      if (editingCardRef.current) {
-        editingCardRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }
+      editingCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }, 100);
   };
 
-  const updatePlayer = (updated: LocalProfile) => {
+  const updatePlayer = (updated: Profile) => {
     const next = players.map(p => (p.id === updated.id ? updated : p));
-    updateProfile(updated as Profile);
+    updateProfile(updated);
     onPlayersChange(next);
   };
 
@@ -271,8 +297,9 @@ function PlayerEditor({ players, onPlayersChange, onBack }: PlayerEditorProps) {
                         key={av}
                         className={`avatar-option ${editingPlayer.avatar === av && !editingPlayer.avatarUrl ? 'selected' : ''}`}
                         onClick={() => {
-                          setEditingPlayer({ ...editingPlayer, avatar: av, avatarUrl: undefined });
-                          updatePlayer({ ...editingPlayer, avatar: av, avatarUrl: undefined });
+                          const updated = { ...editingPlayer, avatar: av, avatarUrl: undefined };
+                          setEditingPlayer(updated);
+                          updatePlayer(updated);
                         }}
                       >
                         {av}
@@ -283,8 +310,9 @@ function PlayerEditor({ players, onPlayersChange, onBack }: PlayerEditorProps) {
                         key={customAv.id}
                         className={`avatar-option ${editingPlayer.avatarUrl === customAv.url ? 'selected' : ''}`}
                         onClick={() => {
-                          setEditingPlayer({ ...editingPlayer, avatar: customAv.name, avatarUrl: customAv.url });
-                          updatePlayer({ ...editingPlayer, avatar: customAv.name, avatarUrl: customAv.url });
+                          const updated = { ...editingPlayer, avatar: customAv.name, avatarUrl: customAv.url };
+                          setEditingPlayer(updated);
+                          updatePlayer(updated);
                         }}
                       >
                         <img src={customAv.url} alt={customAv.name} style={{ width: 40, height: 40, borderRadius: '50%' }} />
@@ -299,7 +327,7 @@ function PlayerEditor({ players, onPlayersChange, onBack }: PlayerEditorProps) {
                     {MAZE_THEMES.map(theme => (
                       <button
                         key={theme.id}
-                        className={`theme-option ${(editingPlayer as any).theme === theme.id ? 'selected' : ''}`}
+                        className={`theme-option ${editingPlayer.theme === theme.id ? 'selected' : ''}`}
                         onClick={() => {
                           const updated = { ...editingPlayer, theme: theme.id, color: theme.chipColor };
                           setEditingPlayer(updated);
@@ -318,45 +346,43 @@ function PlayerEditor({ players, onPlayersChange, onBack }: PlayerEditorProps) {
                 </div>
 
                 <div style={{ marginTop: 12 }}>
-                  <label style={{ display:'block', marginBottom:6 }}>Voice</label>
-                  <div style={{ display:'flex', gap:8, alignItems:'stretch', marginBottom:8 }}>
+                  <label style={{ display: 'block', marginBottom: 6 }}>Voice</label>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'stretch', marginBottom: 8 }}>
                     <select
                       value={editingPlayer.voiceId || ''}
                       style={{ flex: '1 1 auto', minWidth: '150px', padding: '8px', fontSize: '0.95rem', borderRadius: '8px', border: '2px solid #E0E0E0' }}
-                      onChange={e=>{
-                        const sel = e.target.value || undefined;
-                        const updated = editingPlayer ? { ...(editingPlayer as LocalProfile), voiceId: sel } : null;
-                        if(updated){
-                          setEditingPlayer(updated);
-                          updatePlayer(updated);
-                        }
+                      onChange={e => {
+                        const updated = { ...editingPlayer, voiceId: e.target.value || undefined };
+                        setEditingPlayer(updated);
+                        updatePlayer(updated);
                       }}
                     >
                       <option value="">(default)</option>
-                      {voices.map((v,i)=>{
-                        // Use index-based value to guarantee uniqueness
+                      {voices.map((v, i) => {
                         const value = `voice-${i}`;
-                        const key = `${value}`;
-                        return <option key={key} value={value}>{v.name} — {v.lang}</option>;
+                        return <option key={value} value={value}>{v.name} — {v.lang}</option>;
                       })}
                     </select>
-                    <button className="menu-btn" onClick={()=>{
-                      if(editingPlayer){
-                        const sample = editingPlayer.name || 'Hello';
-                        let chosen = null;
-                        if(editingPlayer.voiceId && editingPlayer.voiceId.startsWith('voice-')){
-                          const idx = parseInt(editingPlayer.voiceId.replace('voice-', ''), 10);
-                          chosen = voices[idx] || null;
-                          try{ 
-                            if(chosen){ 
+                    <button 
+                      className="menu-btn" 
+                      onClick={() => {
+                        if (editingPlayer) {
+                          const sample = editingPlayer.name || 'Hello';
+                          if (editingPlayer.voiceId?.startsWith('voice-')) {
+                            const idx = parseInt(editingPlayer.voiceId.replace('voice-', ''), 10);
+                            const chosen = voices[idx];
+                            if (chosen) {
                               const compositeId = `${chosen.name}|${chosen.voiceURI}|${chosen.lang}`;
-                              saveSettings({ ...(loadSettings()||{}), voiceId: compositeId }); 
-                            } 
-                          }catch(e){}
+                              saveSettings({ ...(loadSettings() || {}), voiceId: compositeId });
+                            }
+                          }
+                          speak(sample);
                         }
-                        speak(sample);
-                      }
-                    }} style={{ padding: '8px 16px', whiteSpace: 'nowrap' }}>▶ Play</button>
+                      }} 
+                      style={{ padding: '8px 16px', whiteSpace: 'nowrap' }}
+                    >
+                      ▶ Play
+                    </button>
                   </div>
 
                   <div className="edit-actions">
@@ -417,7 +443,7 @@ interface SettingsMenuProps {
 }
 
 function SettingsMenu({ onBack }: SettingsMenuProps) {
-  const [players, setPlayers] = useState<LocalProfile[]>([]);
+  const [players, setPlayers] = useState<Profile[]>([]);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const [editingWords, setEditingWords] = useState(false);
   const [wordInput, setWordInput] = useState('');
@@ -435,7 +461,7 @@ function SettingsMenu({ onBack }: SettingsMenuProps) {
       p.id === playerId ? { ...p, words } : p
     );
     setPlayers(updated);
-    saveProfiles(updated as Profile[]);
+    saveProfiles(updated);
   };
 
   const addWords = () => {
@@ -476,12 +502,10 @@ function SettingsMenu({ onBack }: SettingsMenuProps) {
     
     if (draggedIndex === null || draggedIndex === index || !selectedPlayerId || !selectedPlayer?.words) return;
     
-    // Reorder in real-time as user drags over items
     const words = [...selectedPlayer.words];
     const [draggedWord] = words.splice(draggedIndex, 1);
     words.splice(index, 0, draggedWord);
     
-    // Update local state immediately for smooth animation
     const updated = players.map(p => 
       p.id === selectedPlayerId ? { ...p, words } : p
     );
@@ -493,7 +517,6 @@ function SettingsMenu({ onBack }: SettingsMenuProps) {
     e.preventDefault();
     if (draggedIndex === null || !selectedPlayerId) return;
     
-    // Get the current player state with reordered words and save
     const currentPlayer = players.find(p => p.id === selectedPlayerId);
     if (currentPlayer?.words) {
       saveWords(selectedPlayerId, currentPlayer.words);
@@ -502,11 +525,10 @@ function SettingsMenu({ onBack }: SettingsMenuProps) {
 
   const handleDragEnd = () => {
     setDraggedIndex(null);
-    // Also save on drag end as a backup
     if (selectedPlayerId) {
       const currentPlayer = players.find(p => p.id === selectedPlayerId);
       if (currentPlayer?.words) {
-        saveProfiles(players as Profile[]);
+        saveProfiles(players);
       }
     }
   };
@@ -521,45 +543,38 @@ function SettingsMenu({ onBack }: SettingsMenuProps) {
       <section className="settings-section">
         <h2>📝 Word Lists</h2>
         
-        {/* Player Selection */}
         <div style={{ marginBottom: 16 }}>
           <label style={{ display: 'block', marginBottom: 8, fontWeight: 'bold' }}>Select Player:</label>
           <div className="player-chips">
             {players.map(p => (
-              <button
+              <PlayerChip
                 key={p.id}
-                className={`player-chip ${selectedPlayerId === p.id ? 'selected' : ''}`}
+                player={p}
+                isSelected={selectedPlayerId === p.id}
                 onClick={() => {
                   setSelectedPlayerId(p.id);
                   setEditingWords(false);
                   setWordInput('');
                 }}
-                style={{ '--chip-color': (p as any).color || '#5B9BD5' } as React.CSSProperties}
-              >
-                <span className="avatar">{(p as any).avatar || '🙂'}</span>
-                <span className="name">{p.name}</span>
-                {selectedPlayerId === p.id && <span className="check">✓</span>}
-              </button>
+              />
             ))}
           </div>
         </div>
 
-        {/* Word List Management */}
         {selectedPlayer && (
           <div style={{ marginTop: 24 }}>
-            {/* Difficulty Level Setting */}
             <div style={{ marginBottom: 20, padding: 16, background: '#f0f8ff', borderRadius: 8, border: '2px solid #4a90e2' }}>
               <label style={{ display: 'block', marginBottom: 8, fontWeight: 'bold', fontSize: '1rem' }}>
                 🎯 Difficulty Level for {selectedPlayer.name}
               </label>
               <select
-                value={(selectedPlayer as any).difficulty || 'easy'}
+                value={selectedPlayer.difficulty || 'easy'}
                 onChange={(e) => {
                   const updated = players.map(p => 
                     p.id === selectedPlayerId ? { ...p, difficulty: e.target.value as 'easy' | 'medium' | 'hard' } : p
                   );
                   setPlayers(updated);
-                  saveProfiles(updated as Profile[]);
+                  saveProfiles(updated);
                 }}
                 style={{
                   width: '100%',
@@ -576,10 +591,9 @@ function SettingsMenu({ onBack }: SettingsMenuProps) {
                 <option value="hard">Hard (+5 random letters)</option>
               </select>
               <div style={{ marginTop: 8, fontSize: '0.85rem', color: '#555', fontStyle: 'italic' }}>
-                {((selectedPlayer as any).difficulty === 'medium' || !(selectedPlayer as any).difficulty || (selectedPlayer as any).difficulty === 'easy') && 
-                  ((selectedPlayer as any).difficulty === 'easy' || !(selectedPlayer as any).difficulty) && 'Perfect for beginners - only the letters needed'}
-                {(selectedPlayer as any).difficulty === 'medium' && 'A bit more challenging with 2 extra letters to ignore'}
-                {(selectedPlayer as any).difficulty === 'hard' && 'Expert mode with 5 extra letters to avoid'}
+                {(!selectedPlayer.difficulty || selectedPlayer.difficulty === 'easy') && 'Perfect for beginners - only the letters needed'}
+                {selectedPlayer.difficulty === 'medium' && 'A bit more challenging with 2 extra letters to ignore'}
+                {selectedPlayer.difficulty === 'hard' && 'Expert mode with 5 extra letters to avoid'}
               </div>
             </div>
 
@@ -617,7 +631,6 @@ function SettingsMenu({ onBack }: SettingsMenuProps) {
               </div>
             </div>
 
-            {/* Add Words Form */}
             {editingWords && (
               <div style={{ marginBottom: 16, padding: 16, background: '#f8f9fa', borderRadius: 8 }}>
                 <label style={{ display: 'block', marginBottom: 8, fontWeight: 'bold' }}>
@@ -648,7 +661,6 @@ function SettingsMenu({ onBack }: SettingsMenuProps) {
               </div>
             )}
 
-            {/* Word List Display */}
             {(selectedPlayer.words?.length || 0) > 0 ? (
               <div style={{ 
                 display: 'flex', 
@@ -672,7 +684,7 @@ function SettingsMenu({ onBack }: SettingsMenuProps) {
                       alignItems: 'center',
                       gap: 6,
                       padding: '6px 12px',
-                      background: (selectedPlayer as any).color || '#5B9BD5',
+                      background: selectedPlayer.color || '#5B9BD5',
                       color: '#fff',
                       borderRadius: 16,
                       fontSize: '0.95rem',

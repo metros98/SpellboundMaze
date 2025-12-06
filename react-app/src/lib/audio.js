@@ -35,7 +35,7 @@ export function speak(text){
     const s = new SpeechSynthesisUtterance(text);
     try{
       // Attempt to apply a saved voice preference (saved in localStorage by Settings)
-      const raw = localStorage.getItem('spellingbee:settings:v1');
+      const raw = localStorage.getItem('spellboundmaze:settings:v1');
       const settings = raw ? JSON.parse(raw) : null;
       const pref = settings && settings.voiceId;
       const voices = speechSynthesis.getVoices() || [];

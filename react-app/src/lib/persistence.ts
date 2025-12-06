@@ -1,7 +1,7 @@
 import { Profile } from '../types';
 
-const STORAGE_KEY = 'spellingbee:profiles:v1';
-const SETTINGS_KEY = 'spellingbee:settings:v1';
+const STORAGE_KEY = 'spellboundmaze:profiles:v1';
+const SETTINGS_KEY = 'spellboundmaze:settings:v1';
 
 export function loadProfiles(): Profile[] {
   try {

@@ -1,7 +1,10 @@
 export interface Profile {
   id: string;
   name: string;
+  avatar?: string;
   avatarUrl?: string;
+  color?: string;
+  theme?: string;
   voiceId?: string;
   words: string[];
   stats?: { played: number; correct: number; lastUpdated?: string };
