@@ -37,6 +37,6 @@ export function loadSeedData(): Profile[] {
 }
 
 export function shouldUseSeedData(): boolean {
-  const storedProfiles = localStorage.getItem('profiles');
+  const storedProfiles = localStorage.getItem('spellboundmaze:profiles:v1');
   return !storedProfiles || storedProfiles === '[]';
 }
