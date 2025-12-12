@@ -167,19 +167,11 @@ Voices are automatically detected from the browser's speech synthesis API
 
 ## 💡 Future Enhancements
 
-- [ ] Multiplayer mode
 - [ ] Timed challenges
 - [ ] Achievement badges
 - [ ] Cloud sync for profiles
 - [ ] Mobile app version
 - [ ] Printable word lists and progress report
-## 💡 Future Enhancements
-
-- [ ] Multiplayer mode
-- [ ] Timed challenges
-- [ ] Achievement system
-- [ ] Cloud sync for profiles
-- [ ] Mobile app version
 - [ ] Additional game modes
 
 ---
