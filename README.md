@@ -10,7 +10,16 @@ An educational spelling game where children navigate a magical maze by spelling 
 - Create unlimited player profiles with unique avatars
 - Custom maze themes (Forest, Ocean, Candy, Space, Sunset, Castle)
 - Personalized word lists for each player
-- Track progress and statistics
+- Comprehensive progress tracking and analytics
+
+### 📊 **Progress Tracking & Analytics**
+- Track games played, words attempted, and accuracy rates
+- Monitor current and best streaks
+- View performance by difficulty level
+- See most missed words for targeted practice
+- Track time played and perfect games
+- Weekly reset option for fresh tracking periods
+- Parent-controlled progress clearing
 
 ### 📝 **Flexible Word Lists**
 - Add custom words per player via the Settings menu
@@ -22,6 +31,7 @@ An educational spelling game where children navigate a magical maze by spelling 
 - **Easy**: Only the letters needed (perfect for beginners)
 - **Medium**: +2 random letters to challenge
 - **Hard**: +5 random letters for experts
+- Per-player difficulty settings
 
 ### 🔊 **Text-to-Speech Support**
 - Choose from multiple voices
@@ -34,6 +44,7 @@ An educational spelling game where children navigate a magical maze by spelling 
 - Themed mazes with custom colors
 - Smooth animations and visual feedback
 - Responsive design for all screen sizes
+- Intuitive player selection with visual chips
 
 ## 🚀 Quick Start
 
@@ -78,9 +89,17 @@ The production build will be in `react-app/dist/`
    - Customize avatar, theme, and voice
 
 2. **Add Words**
-   - Go to Settings → Select player → Add words
-   - Words can be added via comma-separated list or one per line
+   - Go to Settings → Select plor WASD to navigate the maze
+   - Click on letters to collect them instantly
+   - Press Space Bar to collect letters at your position
+   - Collect letters in the correct order to spell the word
+   - Complete all words to win!
 
+5. **View Progress**
+   - Select a player and click "My Stats"
+   - See detailed performance metrics
+   - Track improvement over time
+   - Identify words that need more practice
 3. **Choose Difficulty**
    - Easy: Perfect for learning
    - Medium: Adds challenge
@@ -129,14 +148,31 @@ Add theme definitions to `MAZE_THEMES` in `StartMenu.tsx` with custom color pale
 ### Voice Options
 Voices are automatically detected from the browser's speech synthesis API
 
-## 📄 License
+## 🆕 Recent Updates
 
-This project is open source and available for educational purposes.
+### Version 1.2.0 (December 2025)
+- ✅ **Comprehensive Progress Tracking** - Track games, accuracy, streaks, and performance metrics
+- ✅ **Progress Dashboard** - Visual stats view with performance insights
+- ✅ **Clear Progress Feature** - Reset stats weekly or when introducing new word lists
+- ✅ **Bug Fixes** - Fixed keyboard scrolling and letter collection issues
+- ✅ **Improved Controls** - Canvas auto-focus for immediate keyboard input
+- ✅ **Audio Enhancements** - Reliable audio playback on all interactions
 
-## 🤝 Contributing
+### Version 1.1.0 (November 2025)
+- ✅ **Player Profiles** - Multiple player support with customization
+- ✅ **Difficulty Levels** - Easy, Medium, and Hard modes
+- ✅ **Themed Mazes** - 6 beautiful themes to choose from
+- ✅ **Drag-and-Drop** - Reorder word lists easily
+- ✅ **Voice Selection** - Multiple TTS voice options
 
-Contributions, issues, and feature requests are welcome!
+## 💡 Future Enhancements
 
+- [ ] Multiplayer mode
+- [ ] Timed challenges
+- [ ] Achievement badges
+- [ ] Cloud sync for profiles
+- [ ] Mobile app version
+- [ ] Printable word lists and progress report
 ## 💡 Future Enhancements
 
 - [ ] Multiplayer mode
