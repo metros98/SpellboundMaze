@@ -1,6 +1,10 @@
 import { playBeep, playSuccessTune, playSad, speak } from './audio.js';
 import { shuffle, getReachableCells, generateMaze, openUpMaze, getTraversalPath } from './levelGen.js';
 
+// Get audio context for resuming on user interaction
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+const audioCtx = AudioCtx ? new AudioCtx() : null;
+
 // Theme color definitions
 const THEME_COLORS = {
   forest: { floor: '#e8f5e9', wall: '#558b2f', border: '#a5d6a7' },
@@ -95,6 +99,11 @@ export function init(opts={}){
 
   keyHandler = (e)=>{
     if(!running) return;
+    // Resume audio context on user interaction (required by browsers)
+    if(audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume().catch(()=>{});
+    }
+    
     const key = e.key;
     let dx=0, dy=0;
     if(key === 'ArrowUp' || key === 'w' || key === 'W') dy=-1;
@@ -102,12 +111,12 @@ export function init(opts={}){
     if(key === 'ArrowLeft' || key === 'a' || key === 'A') dx=-1;
     if(key === 'ArrowRight' || key === 'd' || key === 'D') dx=1;
     if(dx!==0 || dy!==0){
+      e.preventDefault(); // Prevent scroll BEFORE checking validity
       const nx = player.x + dx;
       const ny = player.y + dy;
       if(nx>=0 && nx<grid[0].length && ny>=0 && ny<grid.length && grid[ny][nx]===0){
         player.x = nx; player.y = ny;
       }
-      e.preventDefault();
     }
     if(key === ' ' || key === 'Spacebar' || key === 'Enter'){
       attemptCollect();
@@ -119,6 +128,11 @@ export function init(opts={}){
 
   clickHandler = (e)=>{
     if(!running) return;
+    // Resume audio context on user interaction (required by browsers)
+    if(audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume().catch(()=>{});
+    }
+    
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
@@ -143,6 +157,7 @@ export function init(opts={}){
         player.x = tile.x;
         player.y = tile.y;
         attemptCollect();
+        draw(); // Immediate redraw to show collection
         return;
       }
     }

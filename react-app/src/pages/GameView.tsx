@@ -140,6 +140,8 @@ export default function GameView({ profile, onExit }: { profile?: Profile, onExi
         }
         await gameAdapter.setWords(profile.words);
         await gameAdapter.start();
+        // Focus the canvas to ensure keyboard events work immediately
+        c.focus();
       }
     })();
 
@@ -595,13 +597,15 @@ export default function GameView({ profile, onExit }: { profile?: Profile, onExi
           id="reactGameCanvas" 
           ref={canvasRef} 
           width={800} 
-          height={480} 
+          height={480}
+          tabIndex={0}
           style={{ 
             border: '4px solid #fff',
             borderRadius: '12px',
             boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
             maxWidth: '100%',
-            height: 'auto'
+            height: 'auto',
+            outline: 'none'
           }} 
         />
       </div>
