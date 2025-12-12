@@ -3,6 +3,7 @@ import { loadProfiles, saveProfiles, addProfile, updateProfile, deleteProfile, l
 import { speak } from '../lib/audio';
 import { Profile } from '../types';
 import { loadSeedData, shouldUseSeedData } from '../lib/seedData';
+import { ProgressView } from './ProgressView';
 
 // UUID generator
 function generateUUID() {
@@ -30,7 +31,7 @@ const MAZE_THEMES = [
   { id: 'castle', name: 'Castle', colors: ['#E8ECF0', '#4A5568', '#D4AF37'], chipColor: '#4A5568' },
 ];
 
-type MenuScreen = 'main' | 'players' | 'settings';
+type MenuScreen = 'main' | 'players' | 'settings' | 'progress';
 
 interface StartMenuProps {
   onPlay?: (profile: Profile) => void;
@@ -132,6 +133,13 @@ export function StartMenu({ onPlay, onEdit }: StartMenuProps) {
     );
   }
 
+  if (screen === 'progress' && selectedProfileId) {
+    const profile = profiles.find(p => p.id === selectedProfileId);
+    if (profile) {
+      return <ProgressView profile={profile} onBack={() => setScreen('main')} />;
+    }
+  }
+
   return (
     <div className="start-menu">
       <header className="menu-header">
@@ -166,6 +174,15 @@ export function StartMenu({ onPlay, onEdit }: StartMenuProps) {
         >
           <span className="icon">▶</span>
           <span>Start Game</span>
+        </button>
+
+        <button 
+          className="menu-btn" 
+          onClick={() => setScreen('progress')}
+          disabled={!selectedProfileId}
+        >
+          <span className="icon">📊</span>
+          <span>My Stats</span>
         </button>
 
         <button className="menu-btn" onClick={() => setScreen('players')}>

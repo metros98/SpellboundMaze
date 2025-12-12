@@ -13,7 +13,7 @@ export default function ProfileEditor({ profile, onDone }: { profile?: Profile, 
 
   function save(){
     const words = wordsText.split(/\r?\n/).map(s=>s.trim()).filter(Boolean)
-    const p: Profile = { id, name: name || 'Child', words, stats: profile?.stats ?? { played:0, correct:0 } }
+    const p: Profile = { id, name: name || 'Child', words, progress: profile?.progress }
     if(profile && profile.id === id) updateProfile(p); else addProfile(p);
     onDone();
   }

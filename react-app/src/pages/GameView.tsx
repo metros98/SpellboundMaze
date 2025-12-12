@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { Profile } from '../types'
 import gameAdapter from '../lib/gameAdapter'
 import { loadSettings, saveSettings } from '../lib/persistence'
+import { recordGameStart, recordWordAttempt, recordGameEnd } from '../lib/progressTracker'
 
 // Theme color definitions (matching gameCore.js)
 const THEME_COLORS = {
@@ -17,6 +18,8 @@ export default function GameView({ profile, onExit }: { profile?: Profile, onExi
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const correctWordsRef = useRef(0)
   const currentWordRef = useRef('')
+  const gameStartTimeRef = useRef<number>(0)
+  const wordAttemptsRef = useRef<Record<string, number>>({})
   const [overlay, setOverlay] = useState<string | null>(null)
   const [status, setStatus] = useState<any>(null)
   const [showCelebration, setShowCelebration] = useState(false)
@@ -78,6 +81,13 @@ export default function GameView({ profile, onExit }: { profile?: Profile, onExi
             setOverlay(text);
             // Check for correct word completion
             if(text && text.includes('Great! Next word')){
+              const word = currentWordRef.current;
+              const attempts = wordAttemptsRef.current[word] || 1;
+              if (profile) {
+                recordWordAttempt(profile, word, true, attempts);
+              }
+              wordAttemptsRef.current[word] = 0; // reset
+              
               correctWordsRef.current += 1;
               setCorrectWords(correctWordsRef.current);
               setShowFeedback('correct');
@@ -85,6 +95,10 @@ export default function GameView({ profile, onExit }: { profile?: Profile, onExi
             }
             // Check for game completion
             if(text && text.includes('All done')){
+              if (profile) {
+                recordGameEnd(profile, correctWordsRef.current, profile?.words?.length || 0);
+              }
+              
               setTimeout(() => {
                 setShowCelebration(true);
                 // Delayed button display: 2s for perfect, 1s otherwise
@@ -95,7 +109,15 @@ export default function GameView({ profile, onExit }: { profile?: Profile, onExi
             }
             // Check for wrong letter
             if(text && (text.includes('Try again') || text.includes('Out of attempts'))){
-              setFailedWord(currentWordRef.current);
+              const word = currentWordRef.current;
+              wordAttemptsRef.current[word] = (wordAttemptsRef.current[word] || 0) + 1;
+              
+              if(text.includes('Out of attempts') && profile){
+                recordWordAttempt(profile, word, false, wordAttemptsRef.current[word]);
+                wordAttemptsRef.current[word] = 0; // reset
+              }
+              
+              setFailedWord(word);
               setShowFeedback('incorrect');
             }
           }
@@ -111,6 +133,11 @@ export default function GameView({ profile, onExit }: { profile?: Profile, onExi
       });
 
       if(profile?.words && profile.words.length > 0){
+        gameStartTimeRef.current = Date.now();
+        wordAttemptsRef.current = {};
+        if (profile) {
+          recordGameStart(profile, gameStartTimeRef.current);
+        }
         await gameAdapter.setWords(profile.words);
         await gameAdapter.start();
       }
@@ -134,6 +161,11 @@ export default function GameView({ profile, onExit }: { profile?: Profile, onExi
     correctWordsRef.current = 0;
     setShowButtons(false);
     if(profile?.words && profile.words.length > 0){
+      gameStartTimeRef.current = Date.now();
+      wordAttemptsRef.current = {};
+      if (profile) {
+        recordGameStart(profile, gameStartTimeRef.current);
+      }
       await gameAdapter.setWords(profile.words);
       await gameAdapter.start();
     }
