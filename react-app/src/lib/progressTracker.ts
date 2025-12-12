@@ -132,3 +132,21 @@ export function getMostMissedWords(progress: GameProgress, limit: number = 5): {
     .sort((a, b) => b.missCount - a.missCount)
     .slice(0, limit);
 }
+
+export function clearProgress(profile: Profile): Profile {
+  const clearedProfile = {
+    ...profile,
+    progress: initializeProgress()
+  };
+  
+  updateProfile(clearedProfile);
+  return clearedProfile;
+}
+
+export function getProgressSummary(progress: GameProgress | undefined): string {
+  if (!progress || progress.totalGamesPlayed === 0) {
+    return 'No progress data to clear';
+  }
+  
+  return `${progress.totalGamesPlayed} games, ${progress.totalWordsCorrect} correct words, ${progress.perfectGames} perfect games`;
+}

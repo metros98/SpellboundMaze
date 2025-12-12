@@ -4,6 +4,7 @@ import { speak } from '../lib/audio';
 import { Profile } from '../types';
 import { loadSeedData, shouldUseSeedData } from '../lib/seedData';
 import { ProgressView } from './ProgressView';
+import { clearProgress, getProgressSummary } from '../lib/progressTracker';
 
 // UUID generator
 function generateUUID() {
@@ -465,6 +466,7 @@ function SettingsMenu({ onBack }: SettingsMenuProps) {
   const [editingWords, setEditingWords] = useState(false);
   const [wordInput, setWordInput] = useState('');
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [showClearConfirm, setShowClearConfirm] = useState<string | null>(null);
 
   useEffect(() => {
     const persisted = loadProfiles();
@@ -506,6 +508,17 @@ function SettingsMenu({ onBack }: SettingsMenuProps) {
       saveWords(selectedPlayerId, []);
       setEditingWords(false);
     }
+  };
+
+  const handleClearProgress = (playerId: string) => {
+    const profile = players.find(p => p.id === playerId);
+    if (!profile) return;
+    
+    const updatedProfile = clearProgress(profile);
+    const updated = players.map(p => p.id === playerId ? updatedProfile : p);
+    setPlayers(updated);
+    saveProfiles(updated);
+    setShowClearConfirm(null);
   };
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
@@ -749,6 +762,44 @@ function SettingsMenu({ onBack }: SettingsMenuProps) {
                 No words yet. Click "Add Words" to get started!
               </p>
             )}
+
+            {/* Clear Progress Section */}
+            <div style={{ marginTop: 24, paddingTop: 20, borderTop: '2px solid #e0e0e0' }}>
+              <h3 style={{ marginBottom: 12, fontSize: '1rem', color: '#495057' }}>📊 Progress Management</h3>
+              <button
+                className="menu-btn"
+                style={{ 
+                  background: '#dc3545', 
+                  color: 'white',
+                  fontSize: '0.9rem',
+                  padding: '10px 20px',
+                  width: 'auto'
+                }}
+                onClick={() => setShowClearConfirm(selectedPlayer.id)}
+              >
+                🗑️ Clear Progress Stats
+              </button>
+              {selectedPlayer.progress && selectedPlayer.progress.totalGamesPlayed > 0 && (
+                <div style={{ 
+                  fontSize: '0.85rem', 
+                  color: '#6c757d', 
+                  marginTop: 12,
+                  padding: '12px',
+                  background: '#f8f9fa',
+                  borderRadius: 8
+                }}>
+                  <strong>Current progress:</strong> {getProgressSummary(selectedPlayer.progress)}
+                </div>
+              )}
+              <p style={{ 
+                fontSize: '0.85rem', 
+                color: '#6c757d', 
+                marginTop: 8,
+                fontStyle: 'italic'
+              }}>
+                💡 Tip: Clear weekly to track fresh progress
+              </p>
+            </div>
           </div>
         )}
 
@@ -758,6 +809,72 @@ function SettingsMenu({ onBack }: SettingsMenuProps) {
           </p>
         )}
       </section>
+
+      {/* Clear Progress Confirmation Dialog */}
+      {showClearConfirm && (() => {
+        const playerToClear = players.find(p => p.id === showClearConfirm);
+        if (!playerToClear) return null;
+        
+        return (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000
+          }}>
+            <div style={{
+              background: 'white',
+              borderRadius: 16,
+              padding: 32,
+              maxWidth: 450,
+              textAlign: 'center',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.3)'
+            }}>
+              <h2 style={{ marginTop: 0, color: '#dc3545', fontSize: '1.5rem' }}>⚠️ Clear Progress?</h2>
+              <p style={{ color: '#495057', lineHeight: 1.6, marginBottom: 16 }}>
+                This will permanently delete all progress stats for{' '}
+                <strong style={{ color: '#212529' }}>{playerToClear.name}</strong>:
+              </p>
+              <div style={{
+                background: '#f8f9fa',
+                padding: 16,
+                borderRadius: 8,
+                marginBottom: 20,
+                fontSize: '0.95rem',
+                color: '#495057',
+                border: '1px solid #dee2e6'
+              }}>
+                {getProgressSummary(playerToClear.progress)}
+              </div>
+              <p style={{ color: '#6c757d', fontSize: '0.9rem', marginBottom: 24 }}>
+                ✓ Profile, words, and settings will be kept
+              </p>
+              <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
+                <button
+                  className="menu-btn"
+                  style={{ flex: 1, background: '#6c757d', color: 'white' }}
+                  onClick={() => setShowClearConfirm(null)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="menu-btn"
+                  style={{ flex: 1, background: '#dc3545', color: 'white' }}
+                  onClick={() => handleClearProgress(showClearConfirm)}
+                >
+                  Clear Progress
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
