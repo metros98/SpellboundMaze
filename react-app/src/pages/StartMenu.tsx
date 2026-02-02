@@ -21,7 +21,7 @@ function generateUUID() {
 // Constants
 const AVATARS = ['🧙', '🦉', '🐉', '🦊', '🐰', '🐸', '🦁', '🦄', '🐶', '🐱', '🦋', '🐢', '🦦', '🐨', '🐧', '🦎', '🦜'];
 const CUSTOM_AVATARS = [
-  { id: 'otter-face', url: '/avatars/otter-face.png', name: 'Otter' }
+  { id: 'otter-face', url: import.meta.env.BASE_URL + 'avatars/otter-face.png', name: 'Otter' }
 ];
 const MAZE_THEMES = [
   { id: 'forest', name: 'Forest', colors: ['#228B22', '#90EE90', '#2E8B57'], chipColor: '#228B22' },
@@ -77,13 +77,7 @@ export function StartMenu({ onPlay, onEdit }: StartMenuProps) {
   useEffect(() => {
     try {
       const persisted = loadProfiles();
-      if (shouldUseSeedData()) {
-        const seedPlayers = loadSeedData();
-        setProfiles(seedPlayers);
-        saveProfiles(seedPlayers);
-      } else {
-        setProfiles(persisted || []);
-      }
+      setProfiles(persisted || []);
     } catch (e) {
       setProfiles([]);
     }

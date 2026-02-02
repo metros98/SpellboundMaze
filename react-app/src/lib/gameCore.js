@@ -356,6 +356,8 @@ function attemptCollect(){
       if(ui) ui.showOverlay && ui.showOverlay('Try again', 'fail');
       collected = '';
       prepareLevelFor(words[currentWordIndex] || '');
+      hideWordText = false; // Show the word after reset so player can see progress
+      if(ui) ui.updateDisplays && ui.updateDisplays({word: words[currentWordIndex]||'', collected: '', hideWordText, attemptsLeft});
     }
   }
 }
