@@ -32,6 +32,7 @@ export interface Profile {
   words: string[];
   progress?: GameProgress;
   difficulty?: 'easy' | 'medium' | 'hard';
+  trickyLettersEnabled?: boolean;
 }
 
 export interface Settings {
