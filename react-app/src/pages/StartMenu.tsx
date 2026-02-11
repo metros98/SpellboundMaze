@@ -619,6 +619,26 @@ function SettingsMenu({ onBack }: SettingsMenuProps) {
                 {selectedPlayer.difficulty === 'medium' && 'A bit more challenging with 2 extra letters to ignore'}
                 {selectedPlayer.difficulty === 'hard' && 'Expert mode with 5 extra letters to avoid'}
               </div>
+              
+              <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', fontSize: '0.95rem', marginTop: 16, paddingTop: 12, borderTop: '1px solid #d0e8ff' }}>
+                <input
+                  type="checkbox"
+                  checked={selectedPlayer.trickyLettersEnabled || false}
+                  onChange={(e) => {
+                    const updated = players.map(p => 
+                      p.id === selectedPlayerId ? { ...p, trickyLettersEnabled: e.target.checked } : p
+                    );
+                    setPlayers(updated);
+                    saveProfiles(updated);
+                  }}
+                  className="w-4 h-4 accent-blue-600 cursor-pointer"
+                  style={{ marginRight: 8 }}
+                />
+                <span>⚡ Enable Tricky Letters</span>
+              </label>
+              <div style={{ marginTop: 4, fontSize: '0.8rem', color: '#666', fontStyle: 'italic', marginLeft: 28 }}>
+                Include harder letter pairs like B/D, A/E, S/C in the maze
+              </div>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>

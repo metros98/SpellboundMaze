@@ -129,7 +129,8 @@ export default function GameView({ profile, onExit }: { profile?: Profile, onExi
         playerAvatar: profile?.avatar || '🙂',
         playerAvatarUrl: profile?.avatarUrl,
         mazeTheme: profile?.theme || 'forest',
-        difficulty: profile?.difficulty || 'easy'
+        difficulty: profile?.difficulty || 'easy',
+        trickyLettersEnabled: profile?.trickyLettersEnabled || false
       });
 
       if(profile?.words && profile.words.length > 0){

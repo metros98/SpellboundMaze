@@ -28,7 +28,17 @@ const config = {
   playerAvatar: '🙂',
   mazeTheme: 'forest',
   mazeColors: THEME_COLORS.forest,
-  difficulty: 'easy' // easy, medium, hard
+  difficulty: 'easy', // easy, medium, hard
+  trickyLettersEnabled: false
+};
+
+// Confusion map for tricky letters
+const TRICKY_LETTER_MAP = {
+  'S': 'C',
+  'C': 'K',
+  'G': 'J',
+  'A': 'E',
+  'E': 'A'
 };
 
 let ui = null;
@@ -191,6 +201,21 @@ function nextWord(){
   speak(word);
 }
 
+function getTrickyLetters(word) {
+  const wordLetters = word.split('').map(c => c.toUpperCase());
+  const wordSet = new Set(wordLetters);
+  const trickyLetters = [];
+
+  for (const letter of wordLetters) {
+    const tricky = TRICKY_LETTER_MAP[letter];
+    if (tricky && !wordSet.has(tricky)) {
+      trickyLetters.push(tricky.toLowerCase());
+    }
+  }
+
+  return trickyLetters;
+}
+
 function getRandomLetters(count, excludeWord) {
   const alphabet = 'abcdefghijklmnopqrstuvwxyz';
   const result = [];
@@ -222,7 +247,29 @@ function prepareLevelFor(word){
   if(config.difficulty === 'medium') extraLetterCount = 2;
   if(config.difficulty === 'hard') extraLetterCount = 5;
   
-  const extraLetters = extraLetterCount > 0 ? getRandomLetters(extraLetterCount, word) : [];
+  let extraLetters = [];
+  if(extraLetterCount > 0) {
+    if(config.trickyLettersEnabled) {
+      // Get tricky letter candidates
+      const trickyCandidates = getTrickyLetters(word);
+      
+      // Shuffle and take up to extraLetterCount
+      const shuffledTricky = shuffle([...trickyCandidates]);
+      const trickyToUse = shuffledTricky.slice(0, extraLetterCount);
+      extraLetters.push(...trickyToUse);
+      
+      // Fill remaining slots with random letters
+      const remaining = extraLetterCount - extraLetters.length;
+      if(remaining > 0) {
+        const randomLetters = getRandomLetters(remaining, word);
+        extraLetters.push(...randomLetters);
+      }
+    } else {
+      // Use fully random letters (existing behavior)
+      extraLetters = getRandomLetters(extraLetterCount, word);
+    }
+  }
+  
   const allLetters = [...letters, ...extraLetters];
   
   letterTiles = [];
