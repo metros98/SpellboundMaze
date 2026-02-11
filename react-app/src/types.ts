@@ -41,4 +41,5 @@ export interface Settings {
   minLetterSpacing?: number;
   retriesDefault?: number;
   voiceId?: string;
+  trickyLettersEnabled?: boolean;
 }
