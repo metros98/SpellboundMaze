@@ -665,9 +665,9 @@ function SettingsMenu({ onBack }: SettingsMenuProps) {
                     )}
                   </>
                 ) : (
-                  <button 
+                  <button
                     className="menu-btn secondary-btn"
-                    onClick={() => setEditingWords(false)}
+                    onClick={() => { addWords(); setEditingWords(false); }}
                   >
                     ✓ Done
                   </button>
@@ -694,14 +694,6 @@ function SettingsMenu({ onBack }: SettingsMenuProps) {
                     fontFamily: 'monospace'
                   }}
                 />
-                <button 
-                  className="menu-btn primary"
-                  onClick={addWords}
-                  disabled={!wordInput.trim()}
-                  style={{ marginTop: 8 }}
-                >
-                  Add Words
-                </button>
               </div>
             )}
 

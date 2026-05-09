@@ -38,7 +38,8 @@ const TRICKY_LETTER_MAP = {
   'C': 'K',
   'G': 'J',
   'A': 'E',
-  'E': 'A'
+  'E': 'A',
+  'B': 'D'
 };
 
 let ui = null;
